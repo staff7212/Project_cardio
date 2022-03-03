@@ -178,14 +178,7 @@ a:visited {
   color: var(--color-light--1);
 }
 
-.footer__link:link,
-.footer__link:visited {
-  color: var(--color-light--1);
-  transition: all 0.2s;
-}
-
-.footer__link:hover,
-.footer__link:active {
+.footer:hover {
   color: var(--color-light--2);
 }
 
