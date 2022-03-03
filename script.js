@@ -8,6 +8,49 @@ const inputDuration = document.querySelector('.form__input--duration');
 const inputTemp = document.querySelector('.form__input--temp');
 const inputClimb = document.querySelector('.form__input--climb');
 
+class Workout {
+  date = new Date();
+  id = (Date.now() + '').slice(-10);
+
+
+  constructor(coords, distance, duration) {
+    this.coords = coords;
+    this.distance = distance; //км
+    this.duration = duration; // мин
+  }
+}
+
+class Running extends Workout{
+  constructor(coords, distance, duration, temp) {
+    super(coords, distance, duration);
+    this.temp = temp;
+    this.calculatePace();
+  }
+
+  calculatePace() {
+    this.pace = this.duration / this.distance;
+  }
+}
+
+class Cycling extends Workout{
+  constructor(coords, distance, duration, climb) {
+    super(coords, distance, duration);
+    this.climb = climb;
+    this.calculateSpeed();
+  }
+
+  calculateSpeed() {
+    this.speed = this.distance / (this.duration / 60);
+  }
+}
+
+// const run = new Running([50, 50], 7, 40, 170);
+// const cycl = new Cycling([50, 50], 30, 80, 200);
+
+// console.log(run, cycl);
+
+
+
 class App {
   // переменные для карты и для событий на карте
   #map;
