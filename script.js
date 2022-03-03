@@ -8,73 +8,96 @@ const inputDuration = document.querySelector('.form__input--duration');
 const inputTemp = document.querySelector('.form__input--temp');
 const inputClimb = document.querySelector('.form__input--climb');
 
-let map, mapEvent; // переменные для карты и для событий на карте
+class App {
+  // переменные для карты и для событий на карте
+  #map;
+  #mapEvent;
 
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition( //получение координат местонахожения
-    function (position) {
-      const {
-        latitude,
-        longitude
-      } = position.coords;
-      console.log(`https://yandex.ru/maps/?ll=${longitude}%2C${latitude}&z=8.49`);
-    
-      const coords = [latitude, longitude];
-    
-      map = L.map('map').setView(coords, 13); // карты из библиотеки Leaflet
+  constructor() {
+    // Получение местоположения
+    this._getPosition();
 
-      L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
-        maxZoom: 20,
-        attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
-      }).addTo(map);
+    // Обработчики событий
+    form.addEventListener('submit', (e) => this._newWorkout(e));
+    inputType.addEventListener('change', this._toggleClimbField);
+  }
 
-      L.marker(coords) //маркер
-        .addTo(map)
-        .bindPopup('Ты тут')
-        .openPopup();
-
-      // Обработка клика по карте
-      map.on('click', (event) => { // при нажатии на карту
-        mapEvent = event;
-
-        form.classList.remove('hidden'); // показ формы
-        inputDistance.focus(); // курсор для ввода дистанции
-      });
-    },
-    function (error) {
-      alert('Error: ' + error);
+  _getPosition() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition( //получение координат местонахожения
+        this._loadMap.bind(this), // вызывается как обычная funс, теряется контекст
+        function (error) {
+          alert('Error: ' + error);
+        }
+      );
     }
-  );
+  }
+
+  _loadMap(position) {
+    const {latitude, longitude} = position.coords;
+    console.log(`https://yandex.ru/maps/?ll=${longitude}%2C${latitude}&z=8.49`);
+  
+    const coords = [latitude, longitude];
+  
+    this.#map = L.map('map').setView(coords, 13); // карты из библиотеки Leaflet
+
+    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20,
+      attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+    }).addTo(this.#map);
+
+    // удалить
+    L.marker(coords) //маркер
+      .addTo(this.#map)
+      .bindPopup('Ты тут')
+      .openPopup();
+
+    // Обработка клика по карте
+    this.#map.on('click', (e) => this._showForm(e));
+  }
+
+  _showForm(e) {
+    this.#mapEvent = e;
+
+    form.classList.remove('hidden'); // показ формы
+    inputDistance.focus(); // курсор для ввода дистанции
+  }
+
+  _toggleClimbField() {
+    inputClimb.closest('.form__row').classList.toggle('form__row--hidden');
+    inputTemp.closest('.form__row').classList.toggle('form__row--hidden');
+  }
+
+  _newWorkout(e) {
+    e.preventDefault();
+    console.log(this);
+    
+    // Очистка формы
+    inputDistance.value =
+      inputDuration.value =
+      inputTemp.value =
+      inputClimb.value = '';
+  
+    const {lat,lng} = this.#mapEvent.latlng; //координаты
+  
+    L.marker([lat, lng])
+      .addTo(this.#map)
+      .bindPopup(L.popup({ //добавление и настройка маркера
+        autoClose: false,
+        closeOnClick: false,
+        className: 'cycling-popup'
+      }))
+      .setPopupContent('Треня') // контент на маркере
+      .openPopup();
+  } 
 }
+
+const app = new App();
+
+
 
 
 // отправка данных
-form.addEventListener('submit', (e) => {
-  e.preventDefault();
 
-  // Очистка формы
-  inputDistance.value =
-    inputDuration.value =
-    inputTemp.value =
-    inputClimb.value = '';
 
-  const {
-    lat,
-    lng
-  } = mapEvent.latlng; //координаты
 
-  L.marker([lat, lng])
-    .addTo(map)
-    .bindPopup(L.popup({ //добавление и настройка маркера
-      autoClose: false,
-      closeOnClick: false,
-      className: 'cycling-popup'
-    }))
-    .setPopupContent('Треня') // контент на маркере
-    .openPopup();
-});
-
-inputType.addEventListener('change', () => {
-  inputClimb.closest('.form__row').classList.toggle('form__row--hidden');
-  inputTemp.closest('.form__row').classList.toggle('form__row--hidden');
-});
