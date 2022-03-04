@@ -57,13 +57,6 @@ class Cycling extends Workout{
   }
 }
 
-// const run = new Running([50, 50], 7, 40, 170);
-// const cycl = new Cycling([50, 50], 30, 80, 200);
-
-// console.log(run, cycl);
-
-
-
 class App {
   // переменные для карты и для событий на карте
   #map;
@@ -74,9 +67,13 @@ class App {
     // Получение местоположения
     this._getPosition();
 
+    // Получение данных из localStorage
+    this._getLocalStorageData();
+
     // Обработчики событий
-    form.addEventListener('submit', (e) => this._newWorkout(e));
+    form.addEventListener('submit', (e) => this._newWorkout(e)); // или .bind(this)
     inputType.addEventListener('change', this._toggleClimbField);
+    containerWorkouts.addEventListener('click', (e) => this._moveToWorkout(e));
   }
 
   _getPosition() {
@@ -105,6 +102,8 @@ class App {
 
     // Обработка клика по карте
     this.#map.on('click', (e) => this._showForm(e));
+
+    this.#workouts.forEach((workout) => this._displayWorkout(workout));
   }
 
   _showForm(e) {
@@ -133,13 +132,15 @@ class App {
     let workout;
 
     // функция на проверку число или нет, вернет число
-    const areNumber = (...numbers) => numbers.every(num => Number.isFinite(num));
+    const areNumber = (...numbers) => numbers.every(num => Number.isFinite(num) && num > 0);
+    //функция на проверку положительных чисел
+    // она необходма для более чистого кода, не доблаяя проверку выше num > 0
+    const areNumberPositive = (...numbers) => numbers.every(num => num > 0);
 
     // Получение данных из формы
     const type = inputType.value;
     const distance = +inputDistance.value;
     const duration = +inputDuration.value;
-
 
     // Если пробежка - объект Running
     if (type === 'running') {
@@ -178,7 +179,9 @@ class App {
 
     // Очистка формы и скрытие её
     this._hideForm();
-  
+
+    // Отправка данных в localStorage
+    this._addWorkoutsToLocalStorage();
   } 
 
   _displayWorkout(workout) {
@@ -242,14 +245,34 @@ class App {
     }
     form.insertAdjacentHTML('afterend', html);
   }
+
+  _addWorkoutsToLocalStorage() {
+    localStorage.setItem('workouts', JSON.stringify(this.#workouts))
+  }
+
+  _getLocalStorageData() {
+    const data = JSON.parse(localStorage.getItem('workouts'))
+
+    if (!data) return
+  
+    this.#workouts = data;
+
+    this.#workouts.forEach(workout => this._displayWorkoutOnSidebar(workout));
+  }
+
+  _moveToWorkout(e) {
+    const element = e.target.closest('.workout');
+    if (!element) return
+
+    const workout = this.#workouts.find(item => item.id === element.dataset.id)
+
+    this.#map.setView(workout.coords, 13, {
+      animate: true,
+      pan: {
+        duration: 1,
+      },
+    });
+  }
 }
 
 const app = new App();
-
-
-
-
-// отправка данных
-
-
-
