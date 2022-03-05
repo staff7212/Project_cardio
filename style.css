@@ -67,6 +67,7 @@ a:visited {
 }
 
 .workout {
+  position: relative;
   background-color: var(--color-dark--2);
   border-radius: 5px;
   padding: 1.5rem 1rem;
@@ -210,4 +211,20 @@ a:visited {
 }
 .cycling-popup .leaflet-popup-content-wrapper {
   border-left: 5px solid var(--color-brand--1);
+}
+
+
+.close{
+  position:absolute;
+  font-size:20px;
+  color: var(--color-light--3);
+  opacity:.5;
+  font-weight:700;
+  top: 0;
+  right: 15px;
+  cursor:pointer 
+}
+
+.close:hover {
+  color: var(--color-light--1);
 }

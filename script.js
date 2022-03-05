@@ -74,6 +74,8 @@ class App {
     form.addEventListener('submit', (e) => this._newWorkout(e)); // или .bind(this)
     inputType.addEventListener('change', this._toggleClimbField);
     containerWorkouts.addEventListener('click', (e) => this._moveToWorkout(e));
+    //удаление тренировки
+    //containerWorkouts.addEventListener('click', (e) => this._deleteWorkout(e));
   }
 
   _getPosition() {
@@ -167,18 +169,21 @@ class App {
       )
         return alert('Введите число');
       workout = new Cycling( [lat, lng], distance, duration, climb);
+      console.log(this);
     }
     // Добавить объект в массив тренировок
+    
     this.#workouts.push(workout);
 
     //Отобразить тренировку на карте
     this._displayWorkout(workout);
-
+    
     // Отобразить тренировку в списке
     this._displayWorkoutOnSidebar(workout);
-
+    
     // Очистка формы и скрытие её
     this._hideForm();
+
 
     // Отправка данных в localStorage
     this._addWorkoutsToLocalStorage();
@@ -199,6 +204,7 @@ class App {
   _displayWorkoutOnSidebar(workout) {
     let html = `
     <li class="workout workout--${workout.type}" data-id="${workout.id}">
+    <div data-close class="close">&times;</div>
     <h2 class="workout__title">${workout.description}</h2>
       <div class="workout__details">
         <span class="workout__icon">${workout.type === 'running' ? '🏃': '🚵'}</span>
@@ -254,8 +260,27 @@ class App {
     const data = JSON.parse(localStorage.getItem('workouts'))
 
     if (!data) return
-  
-    this.#workouts = data;
+    
+    // создание новых классов из объектов localStorage
+    const settingNewClass = (workout, el) => {
+      workout.date = new Date(el.date);
+      workout._setDescription()
+      workout.id = el.id;
+    }
+
+    data.forEach(el => {
+      let workout;
+      if (el.type === 'running') {
+        workout = new Running(el.coords, el.distance, el.duration, el.temp);
+        settingNewClass(workout, el);
+      }
+
+      if (el.type === 'cycling') {
+        workout = new Cycling(el.coords, el.distance, el.duration, el.climb);
+        settingNewClass(workout, el);
+      }
+      this.#workouts.push(workout);
+    })
 
     this.#workouts.forEach(workout => this._displayWorkoutOnSidebar(workout));
   }
@@ -273,6 +298,48 @@ class App {
       },
     });
   }
+
+  //////////////////////
+  // удаление тренировки, трудность с маркерами на карте
+  _deleteWorkout(e) {
+    if (!e.target.closest('.close')) return;
+    e.stopPropagation();
+
+    const element = e.target.closest('.workout')
+
+    this.#workouts.forEach((workout, index, array) => {
+      if (workout.id == element.dataset.id) {
+        //console.log(L.marker(workout.coords));
+        //this.#map.removeLayer(L.marker(workout.coords))
+        //console.log(this.#map);
+        array.splice(index, 1);
+      }
+    })
+    // const mark = L.marker(element.coords)
+    // console.log(element.coords);
+    // console.log(mark);
+    
+    element.remove()
+
+    this._addWorkoutsToLocalStorage()
+  }
 }
 
 const app = new App();
+
+
+////////// Фичи
+
+// Редактирование тренировки
+//Удаление тренировки
+// удаление всех тренировок
+// Сортировка тренировок
+// Пересоздание классов из localStorage
+// Реалистичное сообшение об ошибке, а не алерт
+
+// сложно
+// Расположение карты, чтобы были видны все метки
+// Возможность рисование линий на карте(маршрут ренировки)
+
+// Геокодирование местоположения
+// Отображение данных о погоде
